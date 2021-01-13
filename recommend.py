@@ -2,7 +2,6 @@
 """
 Created on Tue Dec  1 13:59:33 2020
 
-@author: joshb
 """
 
 
@@ -13,6 +12,8 @@ import os
 import numpy as np
 import pandas as pd
 import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 
 if __name__ == "__main__":    
     # Check if csv file is in the directory
@@ -68,11 +69,35 @@ if __name__ == "__main__":
     '''
 
 
-    # Create a training data set of 1530 and a testing data set of 525
-    # from the 2055 well rated movies
+    genres = [x[4] for x in data]
+    
+    vectorize = TfidfVectorizer()
+    #Construct the required TF-IDF matrix by fitting and transforming the data
+    movie_genres = vectorize.fit_transform(genres)
+
+    cosine_simularity = linear_kernel(movie_genres, movie_genres)
+
+    def get_genre_recommendation(movie, cosine_simularity=cosine_simularity):
+        # Find index of the original movie name
+        index_movie = np.nonzero(data == movie)[0]
+        # Calculate the score by finding movies with similar genres
+        movie_scores = list(enumerate(cosine_simularity[index_movie][0]))
+        movie_scores = sorted(movie_scores, key=lambda x: x[1], reverse=True)
+        movie_scores = movie_scores[0:11]
+        # Get the movie indices of the top 10
+        movie_indices = [i[0] for i in movie_scores]
+    
+        movies_recommended = []
+        for index in movie_indices:
+            movies_recommended += [(data[index][6], data[index][14])]
+        return movies_recommended
+
+    print(get_genre_recommendation("Platoon"))
+
 
 
     	
     
     
     #print("Time taken for execution of above code = "+str(datetime.now() - startTime))
+
